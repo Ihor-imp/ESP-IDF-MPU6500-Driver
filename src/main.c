@@ -46,6 +46,14 @@ esp_err_t i2c_init()
 
 void app_main()
 {
+    float accel_x = 0;
+    float accel_y = 0;
+    float accel_z = 0;
+
+    float gyro_x = 0;
+    float gyro_y = 0;
+    float gyro_z = 0;
+
     vTaskDelay(pdMS_TO_TICKS(3000));
     ESP_LOGI("TEST", "Program started");
 
@@ -84,9 +92,71 @@ void app_main()
     ret = mpu_set_accel_range(&sensor, 2);
     if (ret == ESP_OK)
     {
-        ESP_LOGI("MPU6500", "Device range is success");
+        ESP_LOGI("MPU6500 ACCEL", "Device range is success");
     }
-    else{
-        ESP_LOGE("MPU6500", "Device range is fail %s", esp_err_to_name(ret));
+    else
+    {
+        ESP_LOGE("MPU6500 ACCEL", "Device range is fail %s", esp_err_to_name(ret));
+        return;
+    }
+
+    ret = mpu_set_gyro_range(&sensor, 1);
+    if (ret == ESP_OK)
+    {
+        ESP_LOGI("MPU6500 GYRO", "Device range is success");
+    }
+    else
+    {
+        ESP_LOGE("MPU6500 GYRO", "Device range is fail %s", esp_err_to_name(ret));
+        return;
+    }
+
+    ret = mpu_calibrate_gyro(&sensor);
+
+    if (ret == ESP_OK)
+    {
+        ESP_LOGI("MPU6500 GYRO", "Device calibrate is success");
+    }
+    else
+    {
+        ESP_LOGE("MPU6500 GYRO", "Device calibrate is fail %s", esp_err_to_name(ret));
+        return;
+    }
+
+    ret = mpu_calibrate_accel(&sensor);
+
+    if (ret == ESP_OK)
+    {
+        ESP_LOGI("MPU6500 ACCEL", "Device calibrate is success");
+    }
+    else
+    {
+        ESP_LOGE("MPU6500 ACCEL", "Device calibrate is fail %s", esp_err_to_name(ret));
+        return;
+    }
+
+    while (1)
+    {
+        ret = mpu_read_accel(&sensor, &accel_x, &accel_y, &accel_z);
+        if (ret == ESP_OK)
+        {
+            ESP_LOGI("ACCEL", "X: %.3f g | Y: %.3f g | Z: %.3f g", accel_x, accel_y, accel_z);
+        }
+        else
+        {
+            ESP_LOGE("ACCEL", "Device value is fail %s", esp_err_to_name(ret));
+        }
+
+        ret = mpu_read_gyro(&sensor, &gyro_x, &gyro_y, &gyro_z);
+        if (ret == ESP_OK)
+        {
+            ESP_LOGI("GYRO", "X: %.3f °/s | Y: %.3f °/s | Z: %.3f °/s", gyro_x, gyro_y, gyro_z);
+        }
+        else
+        {
+            ESP_LOGE("GYRO", "Device value is fail %s", esp_err_to_name(ret));
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
